@@ -388,6 +388,7 @@ sudo nginx -t && sudo systemctl reload nginx
 | **502 Bad Gateway** | App not running, or **`proxy_pass`** port wrong. |
 | **Build error `lightningcss` / missing module** | **`rm -rf node_modules && npm ci`** on **Ubuntu**, rebuild. |
 | **Page works on server `curl` but not from home** | Provider firewall or **`ufw`** — allow **80**/443. |
+| **500 on CSS/JS under `/market/_next/static/`** | Ensure **`.env`** has **`NEXT_PUBLIC_BASE_PATH=/market`**, run **`npm run build`**, and use the latest **`server.mjs`** (loads **`.env`** before Next). Then **`npm install`** and restart **`node server.mjs`**. Use **`NODE_ENV=production`** in production. |
 
 ---
 
