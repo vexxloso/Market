@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UserRole } from "@prisma/client";
@@ -135,7 +136,7 @@ export default function ProfileMessagesClient({
   async function notifyTyping(typing: boolean) {
     const cid = selectedIdRef.current;
     if (!cid) return;
-    void fetch(`/api/conversations/${cid}/typing`, {
+    void fetch(withBasePath(`/api/conversations/${cid}/typing`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ typing }),
@@ -144,7 +145,7 @@ export default function ProfileMessagesClient({
 
   const loadConversations = useCallback(async () => {
     setError(null);
-    const res = await fetch("/api/conversations");
+    const res = await fetch(withBasePath("/api/conversations"));
     const data = (await res.json().catch(() => ({}))) as {
       error?: string;
       data?: ConversationDTO[];
@@ -173,7 +174,9 @@ export default function ProfileMessagesClient({
     let cancelled = false;
 
     (async () => {
-      const res = await fetch("/api/realtime/socket-token", { method: "POST" });
+      const res = await fetch(withBasePath("/api/realtime/socket-token"), {
+        method: "POST",
+      });
       if (!res.ok || cancelled) return;
       const { token } = (await res.json()) as { token?: string };
       if (!token || cancelled) return;
@@ -295,7 +298,7 @@ export default function ProfileMessagesClient({
       setLoadingMessages(true);
       setError(null);
       try {
-        const res = await fetch(`/api/conversations/${selectedId}/messages`);
+        const res = await fetch(withBasePath(`/api/conversations/${selectedId}/messages`));
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
           data?: MessageDTO[];
@@ -318,7 +321,7 @@ export default function ProfileMessagesClient({
   useEffect(() => {
     if (!selectedId || loadingMessages) return;
     void (async () => {
-      await fetch(`/api/conversations/${selectedId}/read`, { method: "POST" });
+      await fetch(withBasePath(`/api/conversations/${selectedId}/read`), { method: "POST" });
       broadcastUnreadRefresh();
     })();
   }, [selectedId, loadingMessages]);
@@ -329,9 +332,12 @@ export default function ProfileMessagesClient({
 
   async function deleteMessage(messageId: string) {
     if (!selectedId) return;
-    const res = await fetch(`/api/conversations/${selectedId}/messages/${messageId}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(
+      withBasePath(`/api/conversations/${selectedId}/messages/${messageId}`),
+      {
+        method: "DELETE",
+      },
+    );
     if (!res.ok) return;
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
     void loadConversations();
@@ -551,11 +557,14 @@ export default function ProfileMessagesClient({
                       if (!text) return;
 
                       setBody("");
-                      const res = await fetch(`/api/conversations/${selectedId}/messages`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ body: text }),
-                      });
+                      const res = await fetch(
+                        withBasePath(`/api/conversations/${selectedId}/messages`),
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ body: text }),
+                        },
+                      );
                       const data = (await res.json().catch(() => ({}))) as {
                         error?: string;
                         data?: MessageDTO;

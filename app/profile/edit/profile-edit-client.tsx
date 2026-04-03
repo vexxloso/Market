@@ -1,6 +1,7 @@
 "use client";
 
 import { UserRole } from "@prisma/client";
+import { withBasePath } from "@/lib/app-origin";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import {
@@ -94,7 +95,7 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
     try {
       const fd = new FormData();
       fd.set("file", file);
-      const res = await fetch("/api/uploads/avatar", {
+      const res = await fetch(withBasePath("/api/uploads/avatar"), {
         method: "POST",
         body: fd,
       });
@@ -111,7 +112,7 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
 
       setAvatarUrl(url);
       // Save immediately so the profile view updates without requiring a separate Save action.
-      const patchRes = await fetch("/api/profile", {
+      const patchRes = await fetch(withBasePath("/api/profile"), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ avatarUrl: url }),
@@ -136,7 +137,7 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
     setSaved(false);
     startTransition(async () => {
       try {
-        const res = await fetch("/api/profile", {
+        const res = await fetch(withBasePath("/api/profile"), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

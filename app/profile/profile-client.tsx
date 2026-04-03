@@ -1,6 +1,7 @@
 "use client";
 
 import { BookingStatus, ListingStatus, StayType, UserRole } from "@prisma/client";
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -317,7 +318,7 @@ function BookingReviewForm({
         }
         setBusy(true);
         try {
-          const res = await fetch(`/api/bookings/${bookingId}/review`, {
+          const res = await fetch(withBasePath(`/api/bookings/${bookingId}/review`), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ rating, comment }),
@@ -771,7 +772,7 @@ export function ProfileClient({
                               <button
                                 type="button"
                                 onClick={async () => {
-                                  await fetch(`/api/bookings/${booking.id}/cancel`, {
+                                  await fetch(withBasePath(`/api/bookings/${booking.id}/cancel`), {
                                     method: "POST",
                                   });
                                   router.refresh();
@@ -786,7 +787,7 @@ export function ProfileClient({
                               <button
                                 type="button"
                                 onClick={async () => {
-                                  const res = await fetch(`/api/bookings/${booking.id}/pay`, {
+                                  const res = await fetch(withBasePath(`/api/bookings/${booking.id}/pay`), {
                                     method: "POST",
                                   });
                                   if (!res.ok) return;

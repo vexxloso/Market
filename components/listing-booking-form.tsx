@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -78,7 +79,7 @@ export function ListingBookingForm({
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/bookings", {
+    const res = await fetch(withBasePath("/api/bookings"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

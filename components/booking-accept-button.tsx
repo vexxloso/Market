@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookingStatus } from "@prisma/client";
@@ -22,7 +23,7 @@ export function BookingAcceptButton({
       onClick={async () => {
         setBusy(true);
         try {
-          const res = await fetch(`/api/bookings/${bookingId}/accept`, {
+          const res = await fetch(withBasePath(`/api/bookings/${bookingId}/accept`), {
             method: "POST",
           });
           if (!res.ok) return;

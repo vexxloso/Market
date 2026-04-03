@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
@@ -293,7 +294,7 @@ export function AdminDashboardClient({
     if (!messageUserId) return;
     setMessageErr("");
     setMessageBusy(true);
-    const res = await fetch(`/api/admin/users/${messageUserId}/message`, {
+    const res = await fetch(withBasePath(`/api/admin/users/${messageUserId}/message`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body: messageBody }),
@@ -311,7 +312,7 @@ export function AdminDashboardClient({
   }
 
   async function toggleBan(userId: string, banned: boolean) {
-    const res = await fetch(`/api/admin/users/${userId}/ban`, {
+    const res = await fetch(withBasePath(`/api/admin/users/${userId}/ban`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ banned }),
@@ -328,7 +329,9 @@ export function AdminDashboardClient({
   async function resetPassword(userId: string) {
     setResetBusyId(userId);
     try {
-      const res = await fetch(`/api/admin/users/${userId}/reset-password`, { method: "POST" });
+      const res = await fetch(withBasePath(`/api/admin/users/${userId}/reset-password`), {
+        method: "POST",
+      });
       const data = (await res.json()) as { error?: string; data?: { message?: string } };
       if (!res.ok) {
         alert(data.error ?? "Reset failed.");
@@ -727,11 +730,14 @@ export function AdminDashboardClient({
                                   "Cancel booking (reason required)",
                                   "Cancel booking",
                                   async (reason) => {
-                                    const res = await fetch(`/api/admin/bookings/${b.id}/cancel`, {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ reason }),
-                                    });
+                                    const res = await fetch(
+                                      withBasePath(`/api/admin/bookings/${b.id}/cancel`),
+                                      {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ reason }),
+                                      },
+                                    );
                                     if (!res.ok) {
                                       const d = (await res.json()) as { error?: string };
                                       throw new Error(d.error ?? "Cancel failed.");
@@ -750,11 +756,14 @@ export function AdminDashboardClient({
                                   "Remove booking — notifies guest & host, then deletes record",
                                   "Remove booking",
                                   async (reason) => {
-                                    const res = await fetch(`/api/admin/bookings/${b.id}/remove`, {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ reason }),
-                                    });
+                                    const res = await fetch(
+                                      withBasePath(`/api/admin/bookings/${b.id}/remove`),
+                                      {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ reason }),
+                                      },
+                                    );
                                     if (!res.ok) {
                                       const d = (await res.json()) as { error?: string };
                                       throw new Error(d.error ?? "Remove failed.");
@@ -875,11 +884,14 @@ export function AdminDashboardClient({
                               disabled={l.status === "UNPUBLISHED"}
                               onClick={() =>
                                 openReasonModal("Unpublish listing", "Unpublish", async (reason) => {
-                                  const res = await fetch(`/api/admin/listings/${l.id}/unpublish`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ reason }),
-                                  });
+                                  const res = await fetch(
+                                    withBasePath(`/api/admin/listings/${l.id}/unpublish`),
+                                    {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ reason }),
+                                    },
+                                  );
                                   if (!res.ok) {
                                     const d = (await res.json()) as { error?: string };
                                     throw new Error(d.error ?? "Unpublish failed.");
@@ -894,11 +906,14 @@ export function AdminDashboardClient({
                               className="cursor-pointer rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-xs font-semibold text-red-800"
                               onClick={() =>
                                 openReasonModal("Remove listing", "Remove listing", async (reason) => {
-                                  const res = await fetch(`/api/admin/listings/${l.id}/remove`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ reason }),
-                                  });
+                                  const res = await fetch(
+                                    withBasePath(`/api/admin/listings/${l.id}/remove`),
+                                    {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ reason }),
+                                    },
+                                  );
                                   if (!res.ok) {
                                     const d = (await res.json()) as { error?: string };
                                     throw new Error(d.error ?? "Remove failed.");

@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -9,7 +10,7 @@ import { useAuthModal } from "@/components/auth-modals";
 function MessagesNavLinkWithUnread() {
   const [count, setCount] = useState(0);
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/messages/unread-count");
+    const res = await fetch(withBasePath("/api/messages/unread-count"));
     if (!res.ok) return;
     const j = (await res.json()) as { count?: number };
     setCount(typeof j.count === "number" ? j.count : 0);
@@ -67,7 +68,7 @@ export function HeaderAuthControls({ session }: { session: SessionUser | null })
   const { openLogin } = useAuthModal();
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch(withBasePath("/api/auth/logout"), { method: "POST" });
     router.refresh();
   }
 

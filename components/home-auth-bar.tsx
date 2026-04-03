@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SessionUser } from "@/lib/auth";
@@ -10,7 +11,7 @@ export function HomeAuthBar({ session }: { session: SessionUser | null }) {
   const { openLogin, openSignup } = useAuthModal();
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch(withBasePath("/api/auth/logout"), { method: "POST" });
     router.refresh();
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import { useState, type MouseEvent } from "react";
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -47,7 +48,7 @@ export function ListingLikeButton({
     if (busy) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/listings/${listingId}/like`, {
+      const res = await fetch(withBasePath(`/api/listings/${listingId}/like`), {
         method: "POST",
       });
       const data = (await res.json().catch(() => ({}))) as

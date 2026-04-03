@@ -63,12 +63,19 @@ export async function getSessionUser() {
   return await decodeSession(raw);
 }
 
+function sessionCookieSecure(): boolean {
+  if (process.env.NODE_ENV !== "production") return false;
+  if (process.env.COOKIE_SECURE === "true") return true;
+  const url = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
+  return url.startsWith("https://");
+}
+
 export async function setSessionUser(user: SessionUser) {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, await encodeSession(user), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: sessionCookieSecure(),
     path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
   });

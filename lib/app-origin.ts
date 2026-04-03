@@ -14,6 +14,16 @@ export function getPublicBasePath(): string {
 }
 
 /**
+ * Prefix for browser `fetch()` / `new Request()` so `/api/*` hits the Next app under basePath.
+ * Root-relative paths like `/api/...` go to the site origin only (e.g. wrong on `/market`).
+ */
+export function withBasePath(path: string): string {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  const bp = getPublicBasePath();
+  return bp ? `${bp}${p}` : p;
+}
+
+/**
  * Public base URL for absolute links (emails, redirects, Stripe return URLs).
  * Use origin from the request when available so Host / X-Forwarded-* match Nginx.
  */

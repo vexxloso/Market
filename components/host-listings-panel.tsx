@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -77,7 +78,7 @@ export function HostListingsPanel({
     setActionError(null);
     setBusyId(listingId);
     try {
-      const res = await fetch(`/api/listings/${listingId}`, {
+      const res = await fetch(withBasePath(`/api/listings/${listingId}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),

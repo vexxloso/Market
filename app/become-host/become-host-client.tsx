@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -11,7 +12,7 @@ export function BecomeHostClient() {
   async function onStart() {
     setError("");
     setLoading(true);
-    const res = await fetch("/api/auth/become-host", { method: "POST" });
+    const res = await fetch(withBasePath("/api/auth/become-host"), { method: "POST" });
     setLoading(false);
     if (!res.ok) {
       const data = (await res.json()) as { error?: string };

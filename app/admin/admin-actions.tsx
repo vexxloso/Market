@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -18,7 +19,7 @@ export function UpdateUserRole({
   async function submit() {
     setError("");
     setLoading(true);
-    const res = await fetch(`/api/admin/users/${userId}/role`, {
+    const res = await fetch(withBasePath(`/api/admin/users/${userId}/role`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
@@ -70,7 +71,7 @@ export function UpdateBookingStatus({
   async function submit() {
     setError("");
     setLoading(true);
-    const res = await fetch(`/api/admin/bookings/${bookingId}/status`, {
+    const res = await fetch(withBasePath(`/api/admin/bookings/${bookingId}/status`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),

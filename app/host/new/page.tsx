@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
@@ -185,7 +186,7 @@ function NewListingWizardContent() {
     (async () => {
       setDraftLoading(true);
       setError("");
-      const res = await fetch(`/api/listings/${draftIdFromUrl}`);
+      const res = await fetch(withBasePath(`/api/listings/${draftIdFromUrl}`));
       const raw = await res.text();
       let parsed: { data?: Record<string, unknown>; error?: string } = {};
       try {
@@ -430,7 +431,7 @@ function NewListingWizardContent() {
     setUploading(true);
     const fd = new FormData();
     fd.set("file", file);
-    const res = await fetch("/api/uploads/listing-image", {
+    const res = await fetch(withBasePath("/api/uploads/listing-image"), {
       method: "POST",
       body: fd,
     });
@@ -498,7 +499,7 @@ function NewListingWizardContent() {
     const payload = buildPayload();
     const updating = Boolean(draftListingId);
     const res = await fetch(
-      updating ? `/api/listings/${draftListingId}` : "/api/listings",
+      withBasePath(updating ? `/api/listings/${draftListingId}` : "/api/listings"),
       {
         method: updating ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -524,7 +525,7 @@ function NewListingWizardContent() {
     const payload = buildPayload();
     const updating = Boolean(draftListingId);
     const res = await fetch(
-      updating ? `/api/listings/${draftListingId}` : "/api/listings",
+      withBasePath(updating ? `/api/listings/${draftListingId}` : "/api/listings"),
       {
         method: updating ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },

@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/app-origin";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -19,7 +20,7 @@ export default function BookingSuccessClient() {
         return;
       }
 
-      const res = await fetch("/api/payments/confirm", {
+      const res = await fetch(withBasePath("/api/payments/confirm"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId, sessionId }),
