@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f7f7;
+  --foreground: #222222;
+  --surface: #ffffff;
+  --muted: #6a6a6a;
+  /* Primary brand (teal) — update here to restyle the whole app */
+  --brand: #0d9488;
+  --brand-hover: #0f766e;
+  --brand-soft: #f0fdfa;
+  --brand-soft-hover: #ccfbf1;
+  --brand-soft-border: #99f6e4;
+  --brand-soft-border-light: #ccfbf1;
+  /* Likes / favorites — pink, independent of primary brand */
+  --like: #ff385c;
+  --border: #dddddd;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.surface {
+  background: var(--surface);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.brand-btn {
+  background-color: var(--brand);
+  transition: background-color 0.2s ease;
+}
+
+.brand-btn:hover {
+  background-color: var(--brand-hover);
+}
+
+/* Google Places suggestions above embedded maps */
+.pac-container {
+  z-index: 10000 !important;
+  margin-top: 6px;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}

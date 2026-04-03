@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Listing" ADD COLUMN     "streetLine1" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "Listing" ADD COLUMN     "streetLine2" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "Listing" ADD COLUMN     "city" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "Listing" ADD COLUMN     "stateRegion" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "Listing" ADD COLUMN     "postalCode" TEXT NOT NULL DEFAULT '';
