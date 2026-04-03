@@ -387,7 +387,7 @@ sudo nginx -t && sudo systemctl reload nginx
 |--------|------------|
 | **`EADDRINUSE`** on port | Another program uses the port — **`sudo ss -tlnp \| grep 5000`** then **`kill PID`** or change **`PORT`**. |
 | **502 Bad Gateway** | App not running, or **`proxy_pass`** port wrong. |
-| **Build error `lightningcss` / missing module** | **`rm -rf node_modules && npm ci`** on **Ubuntu**, rebuild. |
+| **Build error `lightningcss.linux-x64-gnu.node`** | Run on the **VPS**: **`rm -rf node_modules .next && npm ci`** (never copy **`node_modules`** from Windows). The default **`npm run build`** uses **webpack** (`--webpack`) so Turbopack does not need that binary. If it still fails: **`npm config delete omit`** then **`npm ci`** again. |
 | **Page works on server `curl` but not from home** | Provider firewall or **`ufw`** — allow **80**/443. |
 | **500 on CSS/JS (`turbopack` in filenames)** | You were in **dev** mode with a **production** `.next` build. Use **`PORT=5000 npm start`** or **`export NODE_ENV=production`** before **`node server.mjs`**. Locally use **`npm run dev`**. |
 
