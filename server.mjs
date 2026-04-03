@@ -1,8 +1,10 @@
 import { createServer } from "node:http";
 import { parse } from "node:url";
-import { loadEnvConfig } from "@next/env";
+import nextEnv from "@next/env";
 import { Server } from "socket.io";
 import { jwtVerify } from "jose";
+
+const { loadEnvConfig } = nextEnv;
 
 /** Load `.env` / `.env.local` before `next()` so `next.config.ts` sees `NEXT_PUBLIC_BASE_PATH` (fixes 500s on `/_next` behind a subpath). */
 const dev = process.env.NODE_ENV !== "production";
