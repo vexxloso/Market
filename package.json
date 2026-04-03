@@ -30,6 +30,10 @@
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4"
   },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.32.0",
+    "lightningcss-win32-x64-msvc": "1.32.0"
+  },
   "devDependencies": {
     "@prisma/engines": "^6.6.0",
     "@types/google.maps": "^3.58.1",
