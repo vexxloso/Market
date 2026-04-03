@@ -26,7 +26,7 @@ This project needs **Node.js**, **PostgreSQL**, **Nginx**, and the **custom serv
 4. Clone your project into a folder (e.g. `~/Market`).
 5. Create a **`.env`** file (copy from **Part B** in this file, or from the project’s `.env` after editing).
 6. Run **`npm ci`**, **`prisma migrate`**, **`npm run build`**.
-7. Start the app with **`node server.mjs`** (port **5000** in examples).
+7. Start the app with **`PORT=5000 npm start`** (production mode; required for static assets).
 8. Edit **Nginx** so **`/market`** goes to port **5000**.
 9. Reload Nginx: **`sudo systemctl reload nginx`**.
 
@@ -219,10 +219,11 @@ In terminal:
 
 ```bash
 cd ~/Market
-export NODE_ENV=production
 export PORT=5000
-node server.mjs
+npm start
 ```
+
+(`npm start` sets **`NODE_ENV=production`** — required so Next serves the **`npm run build`** output. Running **`node server.mjs`** without that often causes **500** on CSS/JS.)
 
 Leave this running. You should see **`Ready`** and **`socket.io`**.
 
@@ -388,7 +389,7 @@ sudo nginx -t && sudo systemctl reload nginx
 | **502 Bad Gateway** | App not running, or **`proxy_pass`** port wrong. |
 | **Build error `lightningcss` / missing module** | **`rm -rf node_modules && npm ci`** on **Ubuntu**, rebuild. |
 | **Page works on server `curl` but not from home** | Provider firewall or **`ufw`** — allow **80**/443. |
-| **500 on CSS/JS under `/market/_next/static/`** | Ensure **`.env`** has **`NEXT_PUBLIC_BASE_PATH=/market`**, run **`npm run build`**, and use the latest **`server.mjs`** (loads **`.env`** before Next). Then **`npm install`** and restart **`node server.mjs`**. Use **`NODE_ENV=production`** in production. |
+| **500 on CSS/JS (`turbopack` in filenames)** | You were in **dev** mode with a **production** `.next` build. Use **`PORT=5000 npm start`** or **`export NODE_ENV=production`** before **`node server.mjs`**. Locally use **`npm run dev`**. |
 
 ---
 
@@ -401,7 +402,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_BASE_PATH=
 ```
 
-Use **`npm run dev`** or **`node server.mjs`** as you do today.
+Use **`npm run dev`** (sets **`NODE_ENV=development`**) — do not use bare **`node server.mjs`** for local dev if you already ran **`npm run build`**, or static assets can 500.
 
 ---
 

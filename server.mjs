@@ -1,14 +1,28 @@
 import { createServer } from "node:http";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { parse } from "node:url";
-import nextEnv from "@next/env";
+import { createRequire } from "node:module";
 import { Server } from "socket.io";
 import { jwtVerify } from "jose";
 
-const { loadEnvConfig } = nextEnv;
+const require = createRequire(import.meta.url);
+const { loadEnvConfig } = require("@next/env");
 
-/** Load `.env` / `.env.local` before `next()` so `next.config.ts` sees `NEXT_PUBLIC_BASE_PATH` (fixes 500s on `/_next` behind a subpath). */
-const dev = process.env.NODE_ENV !== "production";
+/** Load `.env` before `next()` so `next.config.ts` sees `NEXT_PUBLIC_BASE_PATH`. */
+const nodeEnv = process.env.NODE_ENV;
+const dev = nodeEnv !== "production";
 loadEnvConfig(process.cwd(), dev);
+
+const prodBuild = existsSync(join(process.cwd(), ".next", "BUILD_ID"));
+if (dev && prodBuild && nodeEnv !== "development") {
+  console.warn(
+    "\n[server] WARNING: NODE_ENV is not \"production\" or \"development\", but .next/BUILD_ID exists.\n" +
+      "  Next will run in DEV mode and static files often return 500.\n" +
+      "  On the VPS use:  export NODE_ENV=production  then  node server.mjs\n" +
+      "  Or:  npm start\n",
+  );
+}
 
 const hostname = process.env.HOSTNAME || "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
@@ -75,5 +89,7 @@ httpServer
     process.exit(1);
   })
   .listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port} (socket.io)`);
+    console.log(
+      `> Ready on http://${hostname}:${port} (socket.io)  [NODE_ENV=${nodeEnv ?? "(unset)"} dev=${dev}]`,
+    );
   });
