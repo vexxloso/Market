@@ -19,16 +19,17 @@
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
+    "@tailwindcss/postcss": "^4",
     "jose": "^6.2.2",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4"
   },
   "devDependencies": {
     "@prisma/engines": "^6.6.0",
-    "@tailwindcss/postcss": "^4",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -38,7 +39,6 @@
     "eslint-config-next": "16.2.2",
     "fast-check": "^4.3.0",
     "prisma": "^6.19.2",
-    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }
