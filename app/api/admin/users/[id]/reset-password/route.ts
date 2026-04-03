@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { sendPlatformMessageToUser } from "@/lib/admin-messaging";
 import { hashPassword } from "@/lib/password";
-import { getAppOrigin } from "@/lib/app-origin";
+import { getAppPublicBaseUrl } from "@/lib/app-origin";
 
 const DEFAULT_ADMIN_RESET_PASSWORD = "password123";
 
@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: Params) {
     data: { passwordHash },
   });
 
-  const origin = getAppOrigin(request);
+  const origin = getAppPublicBaseUrl(request);
   const notice =
     `[Stayly — password reset by platform admin]\n\n` +
     `Your sign-in password was set to the temporary default below. Please log in and change it as soon as you can.\n\n` +

@@ -3,7 +3,7 @@ import { ListingStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { sendPlatformMessageToUser } from "@/lib/admin-messaging";
-import { getAppOrigin } from "@/lib/app-origin";
+import { getAppPublicBaseUrl } from "@/lib/app-origin";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -31,7 +31,7 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Listing not found." }, { status: 404 });
   }
 
-  const origin = getAppOrigin(request);
+  const origin = getAppPublicBaseUrl(request);
   const listingUrl = `${origin}/listing/${listing.id}`;
   const profileUrl = `${origin}/profile/${listing.hostId}`;
   const hostListingsUrl = `${origin}/profile?tab=listings`;

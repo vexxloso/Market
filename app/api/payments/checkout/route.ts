@@ -3,6 +3,7 @@ import { BookingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { createStripeCheckoutSession } from "@/lib/stripe";
+import { getAppPublicBaseUrl } from "@/lib/app-origin";
 
 type CheckoutPayload = {
   bookingId?: string;
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = getAppPublicBaseUrl(request);
 
   const stripe = await createStripeCheckoutSession({
     amountCents: booking.totalPrice * 100,

@@ -3,7 +3,7 @@ import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { sendPlatformMessageToUser } from "@/lib/admin-messaging";
-import { getAppOrigin } from "@/lib/app-origin";
+import { getAppPublicBaseUrl } from "@/lib/app-origin";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -46,7 +46,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const guestId = booking.userId;
   const hostId = booking.listing.hostId;
-  const origin = getAppOrigin(request);
+  const origin = getAppPublicBaseUrl(request);
   const listingUrl = `${origin}/listing/${booking.listing.id}`;
   const tripsUrl = `${origin}/profile?tab=bookings`;
 

@@ -5,7 +5,7 @@ import { getVerifiedSessionUser } from "@/lib/auth";
 import { ensureBookingConversation } from "@/lib/conversation-utils";
 import { emitToBookingThread } from "@/lib/realtime";
 import { sendPlatformMessageToUser } from "@/lib/admin-messaging";
-import { getAppOrigin } from "@/lib/app-origin";
+import { getAppPublicBaseUrl } from "@/lib/app-origin";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -46,7 +46,7 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Booking not found." }, { status: 404 });
   }
 
-  const origin = getAppOrigin(request);
+  const origin = getAppPublicBaseUrl(request);
   const listingUrl = `${origin}/listing/${booking.listing.id}`;
   const tripsUrl = `${origin}/profile?tab=bookings`;
 
