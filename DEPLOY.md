@@ -387,7 +387,7 @@ sudo nginx -t && sudo systemctl reload nginx
 |--------|------------|
 | **`EADDRINUSE`** on port | Another program uses the port — **`sudo ss -tlnp \| grep 5000`** then **`kill PID`** or change **`PORT`**. |
 | **502 Bad Gateway** | App not running, or **`proxy_pass`** port wrong. |
-| **Build error `lightningcss.linux-x64-gnu.node`** | On the **VPS**: **`rm -rf node_modules .next && npm ci`** (never copy **`node_modules`** from Windows). The repo pins **`lightningcss-linux-x64-gnu`** in **`optionalDependencies`** so **`npm ci`** installs the Linux binary. If it still fails: **`npm ci --include=optional`** or **`npm config list`** — remove **`omit=optional`** if set. |
+| **`lightningcss` / `@tailwindcss/oxide` “Cannot find native binding”** | Tailwind v4 needs **two** Linux native packages. The repo pins **`lightningcss-linux-x64-gnu`** and **`@tailwindcss/oxide-linux-x64-gnu`** in **`optionalDependencies`**. On the VPS: **`rm -rf node_modules .next && npm ci`**, then **`npm run build`**. If it still fails: **`npm ci --include=optional`**, or clear **`omit=optional`** in **`npm config`**. As a last resort on the server only: **`rm -rf node_modules package-lock.json && npm install`** (regenerates lock for Linux; prefer committing an updated lock from **`npm install` on Linux** or from this repo). |
 | **Page works on server `curl` but not from home** | Provider firewall or **`ufw`** — allow **80**/443. |
 | **500 on CSS/JS (`turbopack` in filenames)** | You were in **dev** mode with a **production** `.next` build. Use **`PORT=5000 npm start`** or **`export NODE_ENV=production`** before **`node server.mjs`**. Locally use **`npm run dev`**. |
 
