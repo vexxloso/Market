@@ -146,7 +146,7 @@ function LoginForm({
         {loading ? "Logging in..." : "Log in"}
       </button>
       <p className="text-center text-sm text-neutral-600">
-        New to Stayly?{" "}
+        New to Noire Haven?{" "}
         <button
           type="button"
           onClick={onSwitchToSignup}
@@ -267,7 +267,7 @@ function AuthModalLayers() {
     return (
       <ModalShell
         title="Log in"
-        subtitle="Welcome back to Stayly."
+        subtitle="Welcome back to Noire Haven."
         onClose={ctx.close}
       >
         <LoginForm onSwitchToSignup={() => ctx.openSignup()} onSuccess={onSuccess} />

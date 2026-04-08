@@ -45,7 +45,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const origin = getAppPublicBaseUrl(request);
   const notice =
-    `[Stayly — password reset by platform admin]\n\n` +
+    `[Noire Haven — password reset by platform admin]\n\n` +
     `Your sign-in password was set to the temporary default below. Please log in and change it as soon as you can.\n\n` +
     `Email: ${target.email}\n` +
     `Temporary password: ${password}\n\n` +

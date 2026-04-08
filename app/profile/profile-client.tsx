@@ -368,6 +368,7 @@ export function ProfileClient({
   listings = [],
   tripBookings = [],
   hostIncomingBookings = [],
+  hostPayoutStatus = null,
   initialTab,
   initialMessageBookingId,
 }: {
@@ -383,11 +384,22 @@ export function ProfileClient({
   listings?: ListingItem[];
   tripBookings?: TripBookingItem[];
   hostIncomingBookings?: HostIncomingBookingItem[];
+  /** Stripe Connect / payout verification (hosts & admins who list). */
+  hostPayoutStatus?: {
+    verified: boolean;
+    canPublishListings: boolean;
+    stripeConnectStatus: string;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    detailsSubmitted: boolean;
+    hasStripeAccount: boolean;
+  } | null;
   initialTab: AccountTab;
   initialMessageBookingId?: string;
 }) {
   const router = useRouter();
   const [showAllWrittenReviews, setShowAllWrittenReviews] = useState(false);
+  const [stripeStatusBusy, setStripeStatusBusy] = useState(false);
   const formatDate = (value: string | Date) =>
     new Date(value).toISOString().slice(0, 10);
 
@@ -439,6 +451,64 @@ export function ProfileClient({
                     {profile.name?.trim() || profile.email.split("@")[0]}
                   </p>
                   <p className="mt-1 text-sm text-[#717171]">{roleLabel(profile.role)}</p>
+                  {session.canManageListings && hostPayoutStatus ? (
+                    <div className="mt-4 rounded-xl border border-[#EBEBEB] bg-neutral-50 px-4 py-3 text-left text-sm">
+                      <p className="font-semibold text-neutral-900">Payout verification</p>
+                      <p className="mt-1 text-[#717171]">
+                        {hostPayoutStatus.verified ? (
+                          <span className="font-medium text-emerald-700">
+                            Verified — you can publish listings.
+                          </span>
+                        ) : hostPayoutStatus.canPublishListings ? (
+                          <span>
+                            Stripe not fully connected — you can still publish (admin). Connect when you want
+                            payouts.
+                          </span>
+                        ) : (
+                          <span>
+                            Not verified — connect Stripe to publish. You can still create drafts.
+                          </span>
+                        )}
+                      </p>
+                      <ul className="mt-2 space-y-0.5 text-xs text-[#717171]">
+                        <li>Stripe: {hostPayoutStatus.stripeConnectStatus}</li>
+                        <li>
+                          Charges {hostPayoutStatus.chargesEnabled ? "on" : "off"} · Payouts{" "}
+                          {hostPayoutStatus.payoutsEnabled ? "on" : "off"}
+                          {hostPayoutStatus.detailsSubmitted ? "" : " · Details incomplete"}
+                        </li>
+                      </ul>
+                      {!hostPayoutStatus.verified ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Link
+                            href="/host/connect"
+                            className="inline-flex rounded-lg bg-[var(--brand)] px-4 py-2 text-xs font-semibold text-white hover:opacity-95"
+                          >
+                            {hostPayoutStatus.canPublishListings
+                              ? "Connect Stripe (payouts)"
+                              : "Connect payouts"}
+                          </Link>
+                          {hostPayoutStatus.hasStripeAccount ? (
+                            <button
+                              type="button"
+                              disabled={stripeStatusBusy}
+                              onClick={() => {
+                                setStripeStatusBusy(true);
+                                void fetch(withBasePath("/api/stripe/connect/status"))
+                                  .finally(() => {
+                                    setStripeStatusBusy(false);
+                                    router.refresh();
+                                  });
+                              }}
+                              className="inline-flex rounded-lg border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 disabled:opacity-50"
+                            >
+                              {stripeStatusBusy ? "Refreshing…" : "Refresh status"}
+                            </button>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -787,11 +857,37 @@ export function ProfileClient({
                               <button
                                 type="button"
                                 onClick={async () => {
-                                  const res = await fetch(withBasePath(`/api/bookings/${booking.id}/pay`), {
+                                  const res = await fetch(withBasePath("/api/payments/checkout"), {
                                     method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ bookingId: booking.id }),
                                   });
-                                  if (!res.ok) return;
-                                  router.refresh();
+                                  const data = (await res.json().catch(() => ({}))) as {
+                                    checkoutUrl?: string;
+                                    error?: string;
+                                  };
+                                  if (!res.ok || !data.checkoutUrl) {
+                                    alert(data.error ?? "Could not start checkout.");
+                                    return;
+                                  }
+                                  const tab = window.open(data.checkoutUrl, "_blank", "noopener,noreferrer");
+                                  if (!tab) {
+                                    alert(
+                                      "Popup blocked. Please allow popups for this site, then click Pay again.",
+                                    );
+                                    return;
+                                  }
+                                  // Keep the profile page visible. Refresh when the user returns.
+                                  const onReturn = () => {
+                                    window.removeEventListener("focus", onReturn);
+                                    document.removeEventListener("visibilitychange", onVis);
+                                    router.refresh();
+                                  };
+                                  const onVis = () => {
+                                    if (document.visibilityState === "visible") onReturn();
+                                  };
+                                  window.addEventListener("focus", onReturn);
+                                  document.addEventListener("visibilitychange", onVis);
                                 }}
                                 className="rounded-lg bg-sky-700 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-800"
                               >
@@ -822,6 +918,7 @@ export function ProfileClient({
             <HostListingsPanel
               listings={listings}
               canManageListings={session.canManageListings}
+              canPublishListings={hostPayoutStatus?.canPublishListings ?? false}
             />
           </section>
         )}

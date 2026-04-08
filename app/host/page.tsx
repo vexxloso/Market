@@ -4,12 +4,39 @@ import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { BookingAcceptButton } from "@/components/booking-accept-button";
+import { StripeConnectButton } from "@/components/stripe-connect-button";
+import { syncStripeConnectUserFromStripe } from "@/lib/sync-stripe-connect-user";
 
-export default async function HostDashboardPage() {
+type HostPageProps = {
+  searchParams: Promise<{ stripe_error?: string; stripe?: string }>;
+};
+
+export default async function HostDashboardPage({ searchParams }: HostPageProps) {
+  const sp = await searchParams;
   const session = await getVerifiedSessionUser();
   if (!session || (session.role !== UserRole.HOST && session.role !== UserRole.ADMIN)) {
     redirect("/?auth=login");
   }
+
+  if (sp.stripe === "return" || sp.stripe === "refresh") {
+    await syncStripeConnectUserFromStripe(session.id);
+    redirect("/host");
+  }
+
+  const stripeError = sp.stripe_error;
+
+  const me = await prisma.user.findUnique({
+    where: { id: session.id },
+    select: {
+      stripeConnectStatus: true,
+      stripeChargesEnabled: true,
+      stripePayoutsEnabled: true,
+    },
+  });
+
+  const stripeConnected = Boolean(
+    me?.stripeChargesEnabled && me?.stripePayoutsEnabled && me?.stripeConnectStatus === "CONNECTED",
+  );
 
   const myListings = await prisma.listing.findMany({
     where: { hostId: session.id },
@@ -37,6 +64,26 @@ export default async function HostDashboardPage() {
         >
           Add listing
         </Link>
+      </section>
+
+      <section className="mb-7 rounded-2xl border border-[var(--border)] bg-white p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold">Payouts</h2>
+            <p className="muted text-sm">
+              Connect Stripe so you can receive payouts from Noire Haven bookings.
+            </p>
+            {stripeError ? (
+              <p className="mt-2 text-sm text-red-600">
+                Could not open Stripe onboarding. Set{" "}
+                <code className="rounded bg-neutral-100 px-1">STRIPE_SECRET_KEY</code> to your
+                secret key (sk_test_… or sk_live_…), not a publishable key, then try{" "}
+                <strong>Connect Stripe</strong> again.
+              </p>
+            ) : null}
+          </div>
+          <StripeConnectButton connected={stripeConnected} />
+        </div>
       </section>
 
       <section className="mb-7 rounded-2xl border border-[var(--border)] bg-white p-4">

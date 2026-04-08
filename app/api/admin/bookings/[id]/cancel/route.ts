@@ -51,7 +51,7 @@ export async function POST(request: Request, { params }: Params) {
   const tripsUrl = `${origin}/profile?tab=bookings`;
 
   const notice =
-    `[Stayly — booking cancelled by platform]\n` +
+    `[Noire Haven — booking cancelled by platform]\n` +
     `Listing: ${booking.listing.title}\n` +
     `Dates: ${formatBookingDates(booking.checkIn, booking.checkOut)}\n` +
     `Reason: ${reason}\n\n` +

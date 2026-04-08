@@ -1,4 +1,4 @@
-## Stayly (Airbnb-Inspired MVP)
+## Noire Haven (Airbnb-Inspired MVP)
 
 Next.js + Node.js + PostgreSQL + Prisma starter for a vacation rental platform.
 

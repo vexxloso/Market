@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stayly - Find your next stay",
+  title: "Noire Haven - Find your next stay",
   description: "Airbnb-inspired vacation rental marketplace MVP",
 };
 

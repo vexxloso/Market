@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { AmenityIcon } from "./amenity-icons";
 import { countryApproxCenter } from "@/lib/country-approx-center";
 import { LISTING_ADDRESS_COUNTRIES } from "@/lib/listing-address-countries";
+import { STRIPE_CONNECT_REQUIRED_CODE } from "@/lib/host-stripe-payout";
 import {
   ListingLocationStep,
   type ListingAddressPayload,
@@ -179,7 +180,10 @@ function NewListingWizardContent() {
 
   useEffect(() => {
     if (!draftIdFromUrl) {
-      setDraftListingId(null);
+      if (draftListingId !== null) {
+        const t = window.setTimeout(() => setDraftListingId(null), 0);
+        return () => window.clearTimeout(t);
+      }
       return;
     }
     let cancelled = false;
@@ -264,7 +268,7 @@ function NewListingWizardContent() {
     return () => {
       cancelled = true;
     };
-  }, [draftIdFromUrl]);
+  }, [draftIdFromUrl, draftListingId]);
 
   function buildPayload() {
     return {
@@ -299,7 +303,7 @@ function NewListingWizardContent() {
   async function parseJsonResponse(res: Response) {
     const raw = await res.text();
     try {
-      return raw ? (JSON.parse(raw) as { error?: string }) : {};
+      return raw ? (JSON.parse(raw) as { error?: string; code?: string }) : {};
     } catch {
       return {};
     }
@@ -512,6 +516,10 @@ function NewListingWizardContent() {
     setLoading(false);
     if (!res.ok) {
       const data = await parseJsonResponse(res);
+      if (res.status === 403 && data.code === STRIPE_CONNECT_REQUIRED_CODE) {
+        window.location.href = withBasePath("/host/connect");
+        return;
+      }
       setError(data.error ?? "Publish failed.");
       return;
     }

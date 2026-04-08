@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: Params) {
   const hostListingsUrl = `${origin}/profile?tab=listings`;
 
   const note =
-    `[Stayly — listing removed]\n` +
+    `[Noire Haven — listing removed]\n` +
     `Your listing “${listing.title}” was permanently removed by platform moderation.\n` +
     `Reason: ${reason}\n\n` +
     `Links:\n• Your profile: ${profileUrl}\n• Listings tab (manage others): ${hostListingsUrl}`;

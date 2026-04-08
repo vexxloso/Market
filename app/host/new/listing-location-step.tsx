@@ -113,7 +113,9 @@ export function ListingLocationStep({
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const valueRef = useRef(value);
-  valueRef.current = value;
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const [mapsReady, setMapsReady] = useState(false);
   /** Map + Places search (Airbnb-style). Shuts off when API key missing or Maps failed to init. */

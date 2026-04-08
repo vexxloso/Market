@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ListingStatus, StayType } from "@prisma/client";
+import { STRIPE_CONNECT_REQUIRED_CODE } from "@/lib/host-stripe-payout";
 
 export type HostListingCard = {
   id: string;
@@ -63,9 +64,12 @@ function coverImageUrl(listing: HostListingCard): string | null {
 export function HostListingsPanel({
   listings = [],
   canManageListings,
+  canPublishListings = false,
 }: {
   listings?: HostListingCard[];
   canManageListings: boolean;
+  /** False for hosts until Stripe Connect is ready; admins are true without Connect. */
+  canPublishListings?: boolean;
 }) {
   const router = useRouter();
   const [denseGrid, setDenseGrid] = useState(true);
@@ -74,17 +78,32 @@ export function HostListingsPanel({
     null,
   );
 
+  function redirectToStripeConnect() {
+    window.location.href = withBasePath("/host/connect");
+  }
+
   async function patchListingStatus(listingId: string, status: ListingStatus) {
     setActionError(null);
     setBusyId(listingId);
     try {
+      if (status === ListingStatus.PUBLISHED && !canPublishListings) {
+        redirectToStripeConnect();
+        return;
+      }
       const res = await fetch(withBasePath(`/api/listings/${listingId}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      const payload = (await res.json()) as { error?: string };
+      const payload = (await res.json()) as { error?: string; code?: string };
       if (!res.ok) {
+        if (
+          res.status === 403 &&
+          payload.code === STRIPE_CONNECT_REQUIRED_CODE
+        ) {
+          redirectToStripeConnect();
+          return;
+        }
         setActionError({ id: listingId, message: payload.error ?? "Something went wrong." });
         return;
       }

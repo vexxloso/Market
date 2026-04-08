@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { ListingStatus, StayType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
+import {
+  STRIPE_CONNECT_REQUIRED_CODE,
+  STRIPE_CONNECT_REQUIRED_MESSAGE,
+  hostCanPublishListings,
+} from "@/lib/host-stripe-payout";
 
 export async function GET() {
   const data = await prisma.listing.findMany({
@@ -55,9 +60,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Host login required." }, { status: 403 });
   }
 
+  const me = await prisma.user.findUnique({
+    where: { id: session.id },
+    select: {
+      stripeAccountId: true,
+      stripeConnectStatus: true,
+      stripeChargesEnabled: true,
+      stripePayoutsEnabled: true,
+    },
+  });
+  if (!me) {
+    return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+
+  const canPublish = hostCanPublishListings(session.role, me);
+
   const body = (await request.json()) as ListingPayload;
-  const status =
-    body.status && isListingStatus(body.status) ? body.status : ListingStatus.PUBLISHED;
+  const statusExplicit = body.status && isListingStatus(body.status);
+  const status = statusExplicit ? body.status! : canPublish ? ListingStatus.PUBLISHED : ListingStatus.INCOMPLETE;
+
+  if (status === ListingStatus.PUBLISHED && !canPublish) {
+    return NextResponse.json(
+      { error: STRIPE_CONNECT_REQUIRED_MESSAGE, code: STRIPE_CONNECT_REQUIRED_CODE },
+      { status: 403 },
+    );
+  }
 
   const stayType = body.stayType && isStayType(body.stayType) ? body.stayType : "RENTAL_ROOM";
 

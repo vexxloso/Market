@@ -98,7 +98,7 @@ export async function notifyBookingAccepted(bookingId: string) {
   await postAdminNoticeForBooking(bookingId, body);
 }
 
-export async function notifyBookingPaid(bookingId: string) {
+export async function notifyBookingPaid(bookingId: string, input?: { receiptUrl?: string | null }) {
   const b = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -108,12 +108,18 @@ export async function notifyBookingPaid(bookingId: string) {
   });
   if (!b) return;
 
+  const checkIn = b.checkIn.toISOString().slice(0, 10);
+  const checkOut = b.checkOut.toISOString().slice(0, 10);
+  const receiptUrl = input?.receiptUrl?.trim() ? input.receiptUrl.trim() : null;
   const body = [
-    "💳 Payment received (Admin)",
+    "✅ Payment confirmed",
     `${b.listing.title}`,
     `Guest: ${guestLabel(b.user)}`,
-    `Total: $${b.totalPrice}`,
-    `Stay: ${b.checkIn.toISOString().slice(0, 10)} → ${b.checkOut.toISOString().slice(0, 10)}`,
+    `Total paid: $${b.totalPrice}`,
+    `Stay: ${checkIn} → ${checkOut}`,
+    ...(receiptUrl ? ["", `Stripe receipt: ${receiptUrl}`] : []),
+    "",
+    "You can find your booking in Profile → Trips.",
   ].join("\n");
 
   await postAdminNoticeForBooking(bookingId, body);

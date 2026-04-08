@@ -1,5 +1,5 @@
 /**
- * Shared brand mark — use everywhere the Stayly logo should appear (header, footer, etc.).
+ * Shared brand mark — use everywhere the Noire Haven logo should appear (header, footer, etc.).
  */
 export function StaylyMark({
   className,
@@ -16,7 +16,7 @@ export function StaylyMark({
       fill="none"
       aria-hidden={decorative ? true : undefined}
       role={decorative ? undefined : "img"}
-      aria-label={decorative ? undefined : "Stayly"}
+      aria-label={decorative ? undefined : "Noire Haven"}
     >
       <path
         fill="var(--brand, #0d9488)"

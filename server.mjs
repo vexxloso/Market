@@ -14,10 +14,12 @@ const nodeEnv = process.env.NODE_ENV;
 const dev = nodeEnv !== "production";
 loadEnvConfig(process.cwd(), dev);
 
-const prodBuild = existsSync(join(process.cwd(), ".next", "BUILD_ID"));
+/** Must match `distDir` in next.config.ts (NEXT_DIST_DIR). */
+const nextDistDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
+const prodBuild = existsSync(join(process.cwd(), nextDistDir, "BUILD_ID"));
 if (dev && prodBuild && nodeEnv !== "development") {
   console.warn(
-    "\n[server] WARNING: NODE_ENV is not \"production\" or \"development\", but .next/BUILD_ID exists.\n" +
+    `\n[server] WARNING: NODE_ENV is not \"production\" or \"development\", but ${nextDistDir}/BUILD_ID exists.\n` +
       "  Next will run in DEV mode and static files often return 500.\n" +
       "  On the VPS use:  export NODE_ENV=production  then  node server.mjs\n" +
       "  Or:  npm start\n",

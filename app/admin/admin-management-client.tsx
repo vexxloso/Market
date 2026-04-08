@@ -7,13 +7,14 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { UserRole } from "@prisma/client";
 import { UpdateUserRole } from "./admin-actions";
 
-const TAB_IDS = ["overview", "users", "bookings", "listings", "reviews"] as const;
+const TAB_IDS = ["overview", "users", "bookings", "payments", "listings", "reviews"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "users", label: "Users" },
   { id: "bookings", label: "Bookings" },
+  { id: "payments", label: "Payments" },
   { id: "listings", label: "Listings" },
   { id: "reviews", label: "Reviews" },
 ];
@@ -50,6 +51,12 @@ type UserRow = {
   role: UserRole;
   bannedAt: string | null;
   avatarUrl: string | null;
+  stripeAccountId: string | null;
+  stripeConnectStatus: string;
+  stripeChargesEnabled: boolean;
+  stripePayoutsEnabled: boolean;
+  stripeDetailsSubmitted: boolean;
+  stripeVerifiedAt: string | null;
 };
 
 type BookingRow = {
@@ -57,6 +64,13 @@ type BookingRow = {
   status: string;
   guests: number;
   totalPrice: number;
+  stripeCheckoutSessionId: string | null;
+  stripePaymentIntentId: string | null;
+  platformFeeAmount: number | null;
+  hostPayoutAmount: number | null;
+  payoutStatus: string;
+  payoutEligibleAt: string | null;
+  lastPayout: { id: string; status: string; stripeTransferId: string | null; error: string | null } | null;
   checkIn: string;
   checkOut: string;
   user: { id: string; email: string; name: string | null; avatarUrl: string | null };
@@ -235,6 +249,7 @@ export function AdminDashboardClient({
   bookings,
   listings,
   currentAdminId,
+  stripeMode,
   usersCount,
   listingsCount,
   bookingsCount,
@@ -249,6 +264,7 @@ export function AdminDashboardClient({
   bookings: BookingRow[];
   listings: ListingRow[];
   currentAdminId: string;
+  stripeMode: "test" | "live" | null;
   usersCount: number;
   listingsCount: number;
   bookingsCount: number;
@@ -384,6 +400,7 @@ export function AdminDashboardClient({
       day: "numeric",
       year: "numeric",
     });
+  const formatStripeAcct = (id: string | null) => (id ? `${id.slice(0, 8)}…${id.slice(-4)}` : "—");
 
   return (
     <div className="bg-[var(--background)]">
@@ -517,6 +534,7 @@ export function AdminDashboardClient({
                       <th className="py-2 pr-2">User</th>
                       <th className="py-2 pr-2">Role</th>
                       <th className="py-2 pr-2">Status</th>
+                      <th className="py-2 pr-2">Stripe</th>
                       <th className="py-2 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -556,6 +574,24 @@ export function AdminDashboardClient({
                             ) : (
                               <span className="text-xs text-neutral-600">Active</span>
                             )}
+                          </td>
+                          <td className="py-2 pr-2 align-top">
+                            <div className="space-y-0.5">
+                              <div className="text-xs font-medium text-neutral-900">
+                                {u.stripeConnectStatus === "CONNECTED"
+                                  ? "Connected"
+                                  : u.stripeConnectStatus === "PENDING"
+                                    ? "Pending"
+                                    : "Not connected"}
+                              </div>
+                              <div className="text-[11px] text-[var(--muted)]">
+                                Acct: {formatStripeAcct(u.stripeAccountId)}
+                              </div>
+                              <div className="text-[11px] text-[var(--muted)]">
+                                Charges: {u.stripeChargesEnabled ? "on" : "off"} · Payouts:{" "}
+                                {u.stripePayoutsEnabled ? "on" : "off"}
+                              </div>
+                            </div>
                           </td>
                           <td className="py-2 align-top text-right">
                             <div className="flex flex-wrap justify-end gap-1">
@@ -639,6 +675,7 @@ export function AdminDashboardClient({
                       <th className="py-2 pr-2">Host</th>
                       <th className="py-2 pr-2">Stay</th>
                       <th className="py-2 pr-2">Status</th>
+                      <th className="py-2 pr-2">Payment</th>
                       <th className="py-2 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -720,6 +757,38 @@ export function AdminDashboardClient({
                           {formatShortDate(b.checkIn)} → {formatShortDate(b.checkOut)}
                         </td>
                         <td className="py-2 pr-2 align-top text-xs">{b.status}</td>
+                        <td className="py-2 pr-2 align-top">
+                          <div className="space-y-0.5 text-xs">
+                            <div className="text-neutral-900">
+                              Payout: <span className="font-semibold">{b.payoutStatus}</span>
+                            </div>
+                            <div className="text-[11px] text-[var(--muted)]">
+                              Fee:{" "}
+                              {typeof b.platformFeeAmount === "number"
+                                ? `$${(b.platformFeeAmount / 100).toFixed(2)}`
+                                : "—"}{" "}
+                              · Host:{" "}
+                              {typeof b.hostPayoutAmount === "number"
+                                ? `$${(b.hostPayoutAmount / 100).toFixed(2)}`
+                                : "—"}
+                            </div>
+                            <div className="text-[11px] text-[var(--muted)]">
+                              Checkout:{" "}
+                              {b.stripeCheckoutSessionId
+                                ? `${b.stripeCheckoutSessionId.slice(0, 10)}…`
+                                : "—"}
+                            </div>
+                            {b.lastPayout ? (
+                              <div className="text-[11px] text-[var(--muted)]">
+                                Last transfer:{" "}
+                                {b.lastPayout.stripeTransferId
+                                  ? `${b.lastPayout.stripeTransferId.slice(0, 10)}…`
+                                  : "—"}{" "}
+                                ({b.lastPayout.status})
+                              </div>
+                            ) : null}
+                          </div>
+                        </td>
                         <td className="py-2 align-top text-right">
                           <div className="flex flex-col items-end gap-1">
                             <button
@@ -783,6 +852,207 @@ export function AdminDashboardClient({
               </div>
               <PaginationFooter
                 tab="bookings"
+                pageKey="bp"
+                page={pagination.bp}
+                total={bookingsCount}
+                pageSize={pageSize}
+                pages={pagination}
+              />
+            </section>
+          ) : null}
+
+          {tab === "payments" ? (
+            <section
+              id="admin-panel-payments"
+              role="tabpanel"
+              aria-labelledby="admin-tab-payments"
+              className="rounded-2xl border border-[var(--border)] bg-white p-4"
+            >
+              <h2 className="mb-3 text-base font-semibold">Payment processing</h2>
+              <p className="muted mb-3 text-sm">
+                Stripe Checkout + payout tracking for each booking.
+              </p>
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 font-semibold text-emerald-800">
+                  Pay-in (guest → platform)
+                </span>
+                <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 font-semibold text-indigo-800">
+                  Pay-out (platform → host)
+                </span>
+                <span className="ml-auto">
+                  Stripe mode:{" "}
+                  <span className="font-semibold text-neutral-900">{stripeMode ?? "unknown"}</span>
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[980px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-[var(--border)] text-xs uppercase tracking-wide text-[var(--muted)]">
+                      <th className="py-2 pr-2">Type</th>
+                      <th className="py-2 pr-2">Booking</th>
+                      <th className="py-2 pr-2">Guest</th>
+                      <th className="py-2 pr-2">Host</th>
+                      <th className="py-2 pr-2">Booking status</th>
+                      <th className="py-2 pr-2">Total</th>
+                      <th className="py-2 pr-2">Stripe</th>
+                      <th className="py-2 pr-2">Distribution</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const dash =
+                        stripeMode === "test"
+                          ? "https://dashboard.stripe.com/test"
+                          : stripeMode === "live"
+                            ? "https://dashboard.stripe.com"
+                            : null;
+
+                      const events = bookings.flatMap((b) => {
+                        const payIn =
+                          b.stripeCheckoutSessionId || b.stripePaymentIntentId
+                            ? [
+                                {
+                                  key: `${b.id}:payin`,
+                                  type: "PAYIN" as const,
+                                  booking: b,
+                                },
+                              ]
+                            : [];
+                        const payOut = b.lastPayout?.stripeTransferId
+                          ? [
+                              {
+                                key: `${b.id}:payout`,
+                                type: "PAYOUT" as const,
+                                booking: b,
+                              },
+                            ]
+                          : [];
+                        return [...payIn, ...payOut];
+                      });
+
+                      return events.map(({ key, type, booking: b }) => {
+                        const badge =
+                          type === "PAYIN" ? (
+                            <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-800">
+                              PAY-IN
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-800">
+                              PAY-OUT
+                            </span>
+                          );
+
+                        const stripeLink =
+                          type === "PAYIN"
+                            ? b.stripePaymentIntentId && dash
+                              ? `${dash}/payments/${b.stripePaymentIntentId}`
+                              : b.stripeCheckoutSessionId && dash
+                                ? `${dash}/checkout/sessions/${b.stripeCheckoutSessionId}`
+                                : null
+                            : b.lastPayout?.stripeTransferId && dash
+                              ? `${dash}/transfers/${b.lastPayout.stripeTransferId}`
+                              : null;
+
+                        return (
+                          <tr key={key} className="border-b border-[var(--border)] align-top">
+                            <td className="py-2 pr-2">{badge}</td>
+                            <td className="py-2 pr-2">
+                              <div className="space-y-0.5">
+                                <p className="font-medium text-neutral-900">{b.listing.title}</p>
+                                <p className="text-xs text-[var(--muted)]">
+                                  {b.id.slice(0, 10)}… · {formatShortDate(b.checkIn)} →{" "}
+                                  {formatShortDate(b.checkOut)}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="py-2 pr-2 text-xs">
+                              <Link href={`/profile/${b.user.id}`} className="hover:underline">
+                                {b.user.email}
+                              </Link>
+                            </td>
+                            <td className="py-2 pr-2 text-xs">
+                              <Link href={`/profile/${b.listing.hostId}`} className="hover:underline">
+                                {b.listing.host.email}
+                              </Link>
+                            </td>
+                            <td className="py-2 pr-2 text-xs whitespace-nowrap">{b.status}</td>
+                            <td className="py-2 pr-2 text-xs whitespace-nowrap">${b.totalPrice}</td>
+                            <td className="py-2 pr-2">
+                              <div className="space-y-0.5 text-xs">
+                                {type === "PAYIN" ? (
+                                  <>
+                                    <div className="text-[11px] text-[var(--muted)]">
+                                      Checkout:{" "}
+                                      {b.stripeCheckoutSessionId
+                                        ? `${b.stripeCheckoutSessionId.slice(0, 10)}…`
+                                        : "—"}
+                                    </div>
+                                    <div className="text-[11px] text-[var(--muted)]">
+                                      Intent:{" "}
+                                      {b.stripePaymentIntentId
+                                        ? `${b.stripePaymentIntentId.slice(0, 10)}…`
+                                        : "—"}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-[11px] text-[var(--muted)]">
+                                    Transfer:{" "}
+                                    {b.lastPayout?.stripeTransferId
+                                      ? `${b.lastPayout.stripeTransferId.slice(0, 10)}…`
+                                      : "—"}{" "}
+                                    {b.lastPayout?.status ? `(${b.lastPayout.status})` : ""}
+                                  </div>
+                                )}
+                                {stripeLink ? (
+                                  <a
+                                    href={stripeLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex text-[11px] font-semibold text-[var(--brand)] hover:underline"
+                                  >
+                                    Open in Stripe
+                                  </a>
+                                ) : (
+                                  <span className="text-[11px] text-[var(--muted)]">Stripe link unavailable</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-2 pr-2">
+                              <div className="space-y-0.5 text-xs">
+                                <div className="text-[11px] text-[var(--muted)]">
+                                  Fee:{" "}
+                                  {typeof b.platformFeeAmount === "number"
+                                    ? `$${(b.platformFeeAmount / 100).toFixed(2)}`
+                                    : "—"}{" "}
+                                  · Host:{" "}
+                                  {typeof b.hostPayoutAmount === "number"
+                                    ? `$${(b.hostPayoutAmount / 100).toFixed(2)}`
+                                    : "—"}
+                                </div>
+                                <div className="text-[11px] text-[var(--muted)]">
+                                  Payout status: <span className="font-semibold">{b.payoutStatus}</span>
+                                  {b.payoutEligibleAt ? (
+                                    <span> · eligible {formatShortDate(b.payoutEligibleAt)}</span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                    {bookings.length === 0 ? (
+                      <tr>
+                        <td className="py-3 text-sm muted" colSpan={8}>
+                          No bookings yet.
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationFooter
+                tab="payments"
                 pageKey="bp"
                 page={pagination.bp}
                 total={bookingsCount}

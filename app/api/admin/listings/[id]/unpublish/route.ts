@@ -37,7 +37,7 @@ export async function POST(request: Request, { params }: Params) {
   const hostListingsUrl = `${origin}/profile?tab=listings`;
 
   const note =
-    `[Stayly — listing unpublished]\n` +
+    `[Noire Haven — listing unpublished]\n` +
     `Your listing “${listing.title}” was unpublished by platform moderation.\n` +
     `Reason: ${reason}\n\n` +
     `Links:\n• Listing: ${listingUrl}\n• Your profile: ${profileUrl}\n• Host listings tab: ${hostListingsUrl}`;

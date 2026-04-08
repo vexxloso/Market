@@ -13,10 +13,10 @@ export async function SiteHeader() {
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 text-2xl font-bold text-[var(--brand)]"
-          aria-label="Stayly — Home"
+          aria-label="Noire Haven — Home"
         >
           <StaylyMark className="h-8 w-8 shrink-0" decorative />
-          <span className="tracking-tight">stayly</span>
+          <span className="tracking-tight">Noire Haven</span>
         </Link>
         <SearchBar />
         <HeaderAuthControls session={session} />

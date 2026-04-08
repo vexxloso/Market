@@ -212,7 +212,7 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
               My profile
             </h1>
             <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[#717171]">
-              Hosts and guests can see your profile and it may appear across Stayly to help us
+              Hosts and guests can see your profile and it may appear across Noire Haven to help us
               build trust in our community.{" "}
               <button type="button" className={`${LINK_BLUE} underline`}>
                 Learn more

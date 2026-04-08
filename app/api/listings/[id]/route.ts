@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { ListingStatus, StayType } from "@prisma/client";
+import { ListingStatus, StayType, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
+import {
+  STRIPE_CONNECT_REQUIRED_CODE,
+  STRIPE_CONNECT_REQUIRED_MESSAGE,
+  hostCanPublishListings,
+} from "@/lib/host-stripe-payout";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -68,6 +73,25 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   const body = (await request.json()) as UpdatePayload;
+
+  if (body.status === ListingStatus.PUBLISHED && session.role !== UserRole.ADMIN) {
+    const owner = await prisma.user.findUnique({
+      where: { id: listing.hostId },
+      select: {
+        role: true,
+        stripeAccountId: true,
+        stripeConnectStatus: true,
+        stripeChargesEnabled: true,
+        stripePayoutsEnabled: true,
+      },
+    });
+    if (!owner || !hostCanPublishListings(owner.role, owner)) {
+      return NextResponse.json(
+        { error: STRIPE_CONNECT_REQUIRED_MESSAGE, code: STRIPE_CONNECT_REQUIRED_CODE },
+        { status: 403 },
+      );
+    }
+  }
 
   if (body.status === ListingStatus.PUBLISHED) {
     const guestFavorites = (body.guestFavorites ?? listing.guestFavorites).filter(Boolean);

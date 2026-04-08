@@ -3,6 +3,7 @@ import { BookingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { notifyBookingCompleted } from "@/lib/booking-admin-notify";
+import { markBookingPayoutEligible, processBookingPayout } from "@/lib/payouts";
 
 type ReviewPayload = {
   rating?: number;
@@ -88,6 +89,8 @@ export async function POST(
     return { review, booking: updatedBooking };
   });
 
+  await markBookingPayoutEligible(bookingId);
+  void processBookingPayout(bookingId);
   void notifyBookingCompleted(bookingId);
 
   return NextResponse.json({ data: created });

@@ -4,6 +4,7 @@ import { getVerifiedSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ProfileClient } from "./profile-client";
 import { normalizeProfileAnswers } from "@/lib/profile-shared";
+import { hostCanPublishListings, isHostStripePayoutReady } from "@/lib/host-stripe-payout";
 
 type ProfilePageProps = {
   searchParams: Promise<{ tab?: string; booking?: string }>;
@@ -27,6 +28,27 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     tabParam === "profile"
       ? tabParam
       : "profile";
+
+  const hostPayoutFields =
+    session.role === UserRole.HOST || session.role === UserRole.ADMIN
+      ? await prisma.user.findUnique({
+          where: { id: session.id },
+          select: {
+            stripeConnectStatus: true,
+            stripeChargesEnabled: true,
+            stripePayoutsEnabled: true,
+            stripeAccountId: true,
+            stripeDetailsSubmitted: true,
+          },
+        })
+      : null;
+
+  const stripePayoutVerified = hostPayoutFields
+    ? isHostStripePayoutReady(hostPayoutFields)
+    : false;
+  const canPublishListings = hostPayoutFields
+    ? hostCanPublishListings(session.role, hostPayoutFields)
+    : false;
 
   const listings =
     session.role === UserRole.HOST || session.role === UserRole.ADMIN
@@ -118,6 +140,19 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           canManageListings:
             session.role === UserRole.HOST || session.role === UserRole.ADMIN,
         }}
+        hostPayoutStatus={
+          hostPayoutFields
+            ? {
+                verified: stripePayoutVerified,
+                canPublishListings,
+                stripeConnectStatus: hostPayoutFields.stripeConnectStatus,
+                chargesEnabled: hostPayoutFields.stripeChargesEnabled,
+                payoutsEnabled: hostPayoutFields.stripePayoutsEnabled,
+                detailsSubmitted: hostPayoutFields.stripeDetailsSubmitted,
+                hasStripeAccount: Boolean(hostPayoutFields.stripeAccountId),
+              }
+            : null
+        }
         profile={
           profileUser
             ? {

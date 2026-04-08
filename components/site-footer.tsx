@@ -26,10 +26,10 @@ export function SiteFooter() {
             <Link
               href="/"
               className="inline-flex items-center gap-2 text-xl font-bold text-[var(--brand)] hover:opacity-90"
-              aria-label="Stayly — Home"
+              aria-label="Noire Haven — Home"
             >
               <StaylyMark className="h-9 w-9 shrink-0" decorative />
-              <span className="tracking-tight">stayly</span>
+              <span className="tracking-tight">Noire Haven</span>
             </Link>
             <p className="muted mt-3 max-w-xs text-sm leading-relaxed">
               Find unique homes, cabins, and city escapes for your next trip.
@@ -88,7 +88,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="mt-10 flex flex-col gap-3 border-t border-[var(--border)] pt-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Stayly. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Noire Haven. All rights reserved.</p>
           <p className="text-xs sm:text-sm">A demo marketplace for short-term stays.</p>
         </div>
       </div>
