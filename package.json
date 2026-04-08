@@ -10,6 +10,7 @@
     "build:turbo": "next build --turbopack",
     "start": "cross-env NODE_ENV=production node server.mjs",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
