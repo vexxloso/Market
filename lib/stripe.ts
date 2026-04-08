@@ -94,7 +94,14 @@ export async function retrieveStripeCheckoutSession(sessionId: string) {
     url?: string | null;
     expires_at?: number | null;
     payment_intent?: string | null;
-    metadata?: { bookingId?: string };
+    metadata?: {
+      bookingId?: string;
+      platformFeeAmount?: string;
+      hostPayoutAmount?: string;
+      hostId?: string;
+      hostStripeAccountId?: string;
+      [k: string]: string | undefined;
+    };
   };
 }
 
