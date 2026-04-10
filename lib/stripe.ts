@@ -2,13 +2,16 @@ const STRIPE_API_BASE = "https://api.stripe.com/v1";
 
 import { getStripeKeysFromDb } from "@/lib/platform-config";
 
+/** DB keys (Admin UI) take precedence over `.env` so production can use saved keys only. */
 async function getStripeSecretKey(): Promise<string> {
-  const envKey = process.env.STRIPE_SECRET_KEY?.trim();
-  if (envKey) return envKey;
   const keys = await getStripeKeysFromDb();
   const dbKey = keys.stripeSecretKey?.trim() ?? "";
-  if (!dbKey) throw new Error("Stripe secret key is missing. Configure it in Admin → Stripe keys.");
-  return dbKey;
+  if (dbKey) return dbKey;
+  const envKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (envKey) return envKey;
+  throw new Error(
+    "Stripe secret key is missing. Save sk_… in Admin → Stripe keys, or set STRIPE_SECRET_KEY in .env.",
+  );
 }
 
 async function toAuthHeader() {

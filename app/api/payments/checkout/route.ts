@@ -102,24 +102,39 @@ export async function POST(request: Request) {
     metadata.hostStripeAccountId = host.stripeAccountId;
   }
 
-  const stripe = await createStripeCheckoutSession({
-    amountCents: totalCents,
-    title: booking.listing.title,
-    description: `${booking.listing.location}, ${booking.listing.country}`,
-    successUrl: `${appUrl}/book/success?bookingId=${booking.id}&session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: `${appUrl}/profile?tab=bookings`,
-    bookingId: booking.id,
-    metadata,
-  });
+  try {
+    const stripe = await createStripeCheckoutSession({
+      amountCents: totalCents,
+      title: booking.listing.title,
+      description: `${booking.listing.location}, ${booking.listing.country}`,
+      successUrl: `${appUrl}/book/success?bookingId=${booking.id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${appUrl}/profile?tab=bookings`,
+      bookingId: booking.id,
+      metadata,
+    });
 
-  await prisma.booking.update({
-    where: { id: booking.id },
-    data: {
-      stripeCheckoutSessionId: stripe.id,
-      platformFeeAmount: platformFee,
-      hostPayoutAmount: hostAmount,
-    },
-  });
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: {
+        stripeCheckoutSessionId: stripe.id,
+        platformFeeAmount: platformFee,
+        hostPayoutAmount: hostAmount,
+      },
+    });
 
-  return NextResponse.json({ checkoutUrl: stripe.url, bookingId: booking.id });
+    return NextResponse.json({ checkoutUrl: stripe.url, bookingId: booking.id });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Stripe checkout could not be created.";
+    console.error("[payments/checkout]", err);
+    return NextResponse.json(
+      {
+        error:
+          message.includes("Stripe") || message.includes("secret key")
+            ? message
+            : `Could not start checkout: ${message}`,
+      },
+      { status: 502 },
+    );
+  }
 }

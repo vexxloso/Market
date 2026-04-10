@@ -7,12 +7,14 @@ import { listChargesForPaymentIntent } from "@/lib/stripe";
 import { getStripeKeysFromDb } from "@/lib/platform-config";
 
 async function stripeSecret(): Promise<string> {
+  const keys = await getStripeKeysFromDb();
+  const db = keys.stripeWebhookSecret?.trim();
+  if (db) return db;
   const env = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   if (env) return env;
-  const keys = await getStripeKeysFromDb();
-  const s = keys.stripeWebhookSecret?.trim();
-  if (!s) throw new Error("Stripe webhook secret is missing. Configure it in Admin → Stripe keys.");
-  return s;
+  throw new Error(
+    "Stripe webhook secret is missing. Save whsec_… in Admin → Stripe keys, or set STRIPE_WEBHOOK_SECRET in .env.",
+  );
 }
 
 async function verifyStripeSignature(rawBody: string, signatureHeader: string) {

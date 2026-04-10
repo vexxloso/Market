@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
+import { getStripeKeysFromDb } from "@/lib/platform-config";
 import { getVerifiedSessionUser } from "@/lib/auth";
 import { Prisma, UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
@@ -98,12 +99,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   }
 
   const adminEmail = process.env.ADMIN_EMAIL ?? null;
-  const stripeMode =
-    (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_test_")
-      ? ("test" as const)
-      : (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_live_")
-        ? ("live" as const)
-        : null;
+  const keysForMode = await getStripeKeysFromDb();
+  const effectiveSecret =
+    (keysForMode.stripeSecretKey?.trim() ?? "") ||
+    (process.env.STRIPE_SECRET_KEY ?? "").trim();
+  const stripeMode = effectiveSecret.startsWith("sk_test_")
+    ? ("test" as const)
+    : effectiveSecret.startsWith("sk_live_")
+      ? ("live" as const)
+      : null;
   const params = await searchParams;
 
   let usersCount = 0;
