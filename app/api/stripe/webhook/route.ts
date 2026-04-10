@@ -4,14 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { BookingStatus } from "@prisma/client";
 import { notifyBookingPaid } from "@/lib/booking-admin-notify";
 import { listChargesForPaymentIntent } from "@/lib/stripe";
+import { getStripeKeysFromDb } from "@/lib/platform-config";
 
-function stripeSecret(): string {
-  const s = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-  if (!s) throw new Error("STRIPE_WEBHOOK_SECRET is missing.");
+async function stripeSecret(): Promise<string> {
+  const env = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  if (env) return env;
+  const keys = await getStripeKeysFromDb();
+  const s = keys.stripeWebhookSecret?.trim();
+  if (!s) throw new Error("Stripe webhook secret is missing. Configure it in Admin → Stripe keys.");
   return s;
 }
 
-function verifyStripeSignature(rawBody: string, signatureHeader: string) {
+async function verifyStripeSignature(rawBody: string, signatureHeader: string) {
   // Stripe-Signature: t=...,v1=...,v0=...
   const parts = signatureHeader.split(",").map((p) => p.trim());
   const tPart = parts.find((p) => p.startsWith("t="));
@@ -24,7 +28,7 @@ function verifyStripeSignature(rawBody: string, signatureHeader: string) {
 
   const signedPayload = `${timestamp}.${rawBody}`;
   const expected = crypto
-    .createHmac("sha256", stripeSecret())
+    .createHmac("sha256", await stripeSecret())
     .update(signedPayload, "utf8")
     .digest("hex");
 
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
 
   try {
-    verifyStripeSignature(rawBody, sig);
+    await verifyStripeSignature(rawBody, sig);
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
   }

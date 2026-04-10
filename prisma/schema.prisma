@@ -120,6 +120,18 @@ model Booking {
   payouts    Payout[]
 }
 
+/// Singleton row holding platform-level settings (including Stripe keys).
+/// NOTE: Storing secret keys in the database is risky; restrict access to admin server routes only.
+model PlatformConfig {
+  id                          Int      @id @default(1)
+  stripeSecretKeyEnc          String?
+  stripePublishableKey        String?
+  stripeWebhookSecretEnc      String?
+  /// When true, `*_Enc` values are AES-256-GCM encrypted using APP_CONFIG_ENCRYPTION_KEY.
+  encrypted                  Boolean  @default(false)
+  updatedAt                  DateTime @updatedAt
+}
+
 model Payout {
   id               String   @id @default(cuid())
   bookingId        String

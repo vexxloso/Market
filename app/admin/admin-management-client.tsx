@@ -3,11 +3,11 @@
 import { withBasePath } from "@/lib/app-origin";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { UserRole } from "@prisma/client";
 import { UpdateUserRole } from "./admin-actions";
 
-const TAB_IDS = ["overview", "users", "bookings", "payments", "listings", "reviews"] as const;
+const TAB_IDS = ["overview", "users", "bookings", "payments", "stripe-keys", "listings", "reviews"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const TABS: { id: TabId; label: string }[] = [
@@ -15,6 +15,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "users", label: "Users" },
   { id: "bookings", label: "Bookings" },
   { id: "payments", label: "Payments" },
+  { id: "stripe-keys", label: "Stripe keys" },
   { id: "listings", label: "Listings" },
   { id: "reviews", label: "Reviews" },
 ];
@@ -300,6 +301,35 @@ export function AdminDashboardClient({
   const [reasonErr, setReasonErr] = useState("");
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [resetBusyId, setResetBusyId] = useState<string | null>(null);
+
+  const [stripeKeysBusy, setStripeKeysBusy] = useState(false);
+  const [stripeKeysErr, setStripeKeysErr] = useState("");
+  const [stripeKeysStatus, setStripeKeysStatus] = useState<{
+    configured: boolean;
+    mode: "test" | "live" | null;
+    encrypted: boolean;
+    updatedAt: string | null;
+    stripeSecretKeyMasked: string;
+    stripePublishableKeyMasked: string;
+    stripeWebhookSecretMasked: string;
+  } | null>(null);
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [stripeWebhookSecret, setStripeWebhookSecret] = useState("");
+
+  useEffect(() => {
+    if (tab !== "stripe-keys") return;
+    setStripeKeysErr("");
+    setStripeKeysBusy(true);
+    void fetch(withBasePath("/api/admin/stripe-keys"))
+      .then(async (r) => {
+        const d = (await r.json().catch(() => ({}))) as { data?: unknown; error?: string };
+        if (!r.ok) throw new Error(d.error ?? "Failed to load keys.");
+        setStripeKeysStatus(d.data as typeof stripeKeysStatus);
+      })
+      .catch((e) => setStripeKeysErr(e instanceof Error ? e.message : "Failed to load keys."))
+      .finally(() => setStripeKeysBusy(false));
+  }, [tab]);
 
   function flashNotice(text: string) {
     setActionNotice(text);
@@ -1059,6 +1089,175 @@ export function AdminDashboardClient({
                 pageSize={pageSize}
                 pages={pagination}
               />
+            </section>
+          ) : null}
+
+          {tab === "stripe-keys" ? (
+            <section
+              id="admin-panel-stripe-keys"
+              role="tabpanel"
+              aria-labelledby="admin-tab-stripe-keys"
+              className="rounded-2xl border border-[var(--border)] bg-white p-4"
+            >
+              <h2 className="mb-2 text-base font-semibold">Stripe keys</h2>
+              <p className="muted mb-4 text-sm">
+                Admin can set Stripe keys here. The server will use these values for Stripe API
+                calls and webhook verification.
+              </p>
+
+              {stripeKeysErr ? (
+                <p className="mb-3 text-sm text-red-600">{stripeKeysErr}</p>
+              ) : null}
+
+              <div className="mb-5 grid gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                <p className="font-semibold">Security warning</p>
+                <p className="muted">
+                  Storing secret keys in the database increases risk. If possible, prefer server
+                  environment secrets. If you must store keys here, consider setting{" "}
+                  <code className="rounded bg-white/60 px-1">APP_CONFIG_ENCRYPTION_KEY</code> on
+                  the server to encrypt values at rest.
+                </p>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
+                  <p className="text-sm font-semibold text-neutral-900">Current status</p>
+                  {stripeKeysBusy ? (
+                    <p className="muted mt-2 text-sm">Loading…</p>
+                  ) : stripeKeysStatus ? (
+                    <div className="mt-3 space-y-2 text-sm">
+                      <p className="muted">
+                        Configured:{" "}
+                        <span className="font-semibold text-neutral-900">
+                          {stripeKeysStatus.configured ? "Yes" : "No"}
+                        </span>
+                      </p>
+                      <p className="muted">
+                        Mode:{" "}
+                        <span className="font-semibold text-neutral-900">
+                          {stripeKeysStatus.mode ?? "—"}
+                        </span>
+                      </p>
+                      <p className="muted">
+                        Encrypted at rest:{" "}
+                        <span className="font-semibold text-neutral-900">
+                          {stripeKeysStatus.encrypted ? "Yes" : "No"}
+                        </span>
+                      </p>
+                      <p className="muted">
+                        Updated:{" "}
+                        <span className="font-semibold text-neutral-900">
+                          {stripeKeysStatus.updatedAt ?? "—"}
+                        </span>
+                      </p>
+                      <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-xs">
+                        <p className="muted">Secret key: {stripeKeysStatus.stripeSecretKeyMasked}</p>
+                        <p className="muted">
+                          Publishable key: {stripeKeysStatus.stripePublishableKeyMasked}
+                        </p>
+                        <p className="muted">
+                          Webhook secret: {stripeKeysStatus.stripeWebhookSecretMasked}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="mt-2 inline-flex rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50"
+                        onClick={() => refresh()}
+                      >
+                        Refresh admin page
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="muted mt-2 text-sm">No data.</p>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
+                  <p className="text-sm font-semibold text-neutral-900">Update keys</p>
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-neutral-900">
+                        STRIPE_SECRET_KEY (sk_…)
+                      </label>
+                      <input
+                        value={stripeSecretKey}
+                        onChange={(e) => setStripeSecretKey(e.target.value)}
+                        placeholder="sk_test_... or sk_live_..."
+                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-neutral-900">
+                        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY (pk_…) (optional)
+                      </label>
+                      <input
+                        value={stripePublishableKey}
+                        onChange={(e) => setStripePublishableKey(e.target.value)}
+                        placeholder="pk_test_... or pk_live_..."
+                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-neutral-900">
+                        STRIPE_WEBHOOK_SECRET (whsec_…)
+                      </label>
+                      <input
+                        value={stripeWebhookSecret}
+                        onChange={(e) => setStripeWebhookSecret(e.target.value)}
+                        placeholder="whsec_..."
+                        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={stripeKeysBusy}
+                      className="brand-btn inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                      onClick={() => {
+                        setStripeKeysErr("");
+                        setStripeKeysBusy(true);
+                        const payload: Record<string, string> = {};
+                        if (stripeSecretKey.trim()) payload.stripeSecretKey = stripeSecretKey.trim();
+                        if (stripePublishableKey.trim())
+                          payload.stripePublishableKey = stripePublishableKey.trim();
+                        if (stripeWebhookSecret.trim())
+                          payload.stripeWebhookSecret = stripeWebhookSecret.trim();
+                        if (Object.keys(payload).length === 0) {
+                          setStripeKeysErr("Enter at least one key to save.");
+                          setStripeKeysBusy(false);
+                          return;
+                        }
+                        void fetch(withBasePath("/api/admin/stripe-keys"), {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(payload),
+                        })
+                          .then(async (r) => {
+                            const d = (await r.json().catch(() => ({}))) as { error?: string };
+                            if (!r.ok) throw new Error(d.error ?? "Save failed.");
+                            setStripeSecretKey("");
+                            setStripePublishableKey("");
+                            setStripeWebhookSecret("");
+                            flashNotice("Stripe keys saved.");
+                            // Reload status
+                            const res = await fetch(withBasePath("/api/admin/stripe-keys"));
+                            const dd = (await res.json().catch(() => ({}))) as { data?: unknown; error?: string };
+                            if (res.ok) setStripeKeysStatus(dd.data as typeof stripeKeysStatus);
+                          })
+                          .catch((e) =>
+                            setStripeKeysErr(e instanceof Error ? e.message : "Save failed."),
+                          )
+                          .finally(() => setStripeKeysBusy(false));
+                      }}
+                    >
+                      {stripeKeysBusy ? "Saving…" : "Save keys"}
+                    </button>
+                    <p className="muted text-xs">
+                      After saving, restart the server process in production to ensure all workers
+                      pick up the new configuration.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </section>
           ) : null}
 

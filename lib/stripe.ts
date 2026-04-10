@@ -1,29 +1,29 @@
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
 
-function getStripeKey() {
-  const key = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!key) {
-    throw new Error(
-      "STRIPE_SECRET_KEY is missing. Add your Stripe secret key from https://dashboard.stripe.com/apikeys",
-    );
-  }
-  if (key.startsWith("pk_")) {
-    throw new Error(
-      "STRIPE_SECRET_KEY must be a secret key (sk_test_... or sk_live_...), not a publishable key (pk_...). Copy the “Secret key” from https://dashboard.stripe.com/apikeys",
-    );
-  }
-  return key;
+import { getStripeKeysFromDb } from "@/lib/platform-config";
+
+async function getStripeSecretKey(): Promise<string> {
+  const envKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (envKey) return envKey;
+  const keys = await getStripeKeysFromDb();
+  const dbKey = keys.stripeSecretKey?.trim() ?? "";
+  if (!dbKey) throw new Error("Stripe secret key is missing. Configure it in Admin → Stripe keys.");
+  return dbKey;
 }
 
-function toAuthHeader() {
-  return `Basic ${Buffer.from(`${getStripeKey()}:`).toString("base64")}`;
+async function toAuthHeader() {
+  const key = await getStripeSecretKey();
+  if (key.startsWith("pk_")) {
+    throw new Error("Stripe secret key must be sk_test_... or sk_live_..., not pk_...");
+  }
+  return `Basic ${Buffer.from(`${key}:`).toString("base64")}`;
 }
 
 async function stripePost(path: string, body: URLSearchParams, headers?: Record<string, string>) {
   const res = await fetch(`${STRIPE_API_BASE}${path}`, {
     method: "POST",
     headers: {
-      Authorization: toAuthHeader(),
+      Authorization: await toAuthHeader(),
       "Content-Type": "application/x-www-form-urlencoded",
       ...(headers ?? {}),
     },
@@ -38,7 +38,7 @@ async function stripePost(path: string, body: URLSearchParams, headers?: Record<
 
 async function stripeGet(path: string) {
   const res = await fetch(`${STRIPE_API_BASE}${path}`, {
-    headers: { Authorization: toAuthHeader() },
+    headers: { Authorization: await toAuthHeader() },
   });
   if (!res.ok) {
     const text = await res.text();

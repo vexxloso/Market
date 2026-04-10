@@ -17,11 +17,16 @@ const account = [
   { href: "/profile?tab=messages", label: "Messages" },
 ];
 
+const legal = [
+  { href: "/terms", label: "Terms & conditions" },
+  { href: "/privacy", label: "Privacy & cookie policy" },
+];
+
 export function SiteFooter() {
   return (
     <footer className="surface mt-auto border-t border-[var(--border)]">
       <div className="container py-12 pb-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <Link
               href="/"
@@ -75,6 +80,23 @@ export function SiteFooter() {
             </h2>
             <ul className="mt-4 space-y-3 text-sm">
               {account.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="muted transition hover:text-neutral-900"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-900">
+              Legal
+            </h2>
+            <ul className="mt-4 space-y-3 text-sm">
+              {legal.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
