@@ -8,7 +8,7 @@ export default async function BecomeHostPage() {
   const session = await getVerifiedSessionUser();
 
   if (!session) {
-    redirect("/?auth=signup");
+    redirect("/?auth=login");
   }
 
   if (session.role === UserRole.HOST || session.role === UserRole.ADMIN) {

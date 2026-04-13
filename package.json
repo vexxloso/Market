@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node server.mjs",
+    "dev": "next dev",
     "dev:clean": "node scripts/clean-next.mjs && cross-env NODE_ENV=development node server.mjs",
     "dev:next": "next dev",
     "build": "next build --webpack",
@@ -27,6 +27,7 @@
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "resend": "^6.10.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4"
@@ -43,8 +44,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "effect": "^3.17.13",
     "cross-env": "^7.0.3",
+    "effect": "^3.17.13",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "fast-check": "^4.3.0",

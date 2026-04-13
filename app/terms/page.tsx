@@ -47,6 +47,12 @@ export default function TermsPage() {
                   >
                     Privacy policy
                   </Link>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
+                  >
+                    Contact us
+                  </Link>
                 </div>
               </div>
 

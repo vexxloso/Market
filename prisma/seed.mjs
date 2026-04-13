@@ -29,6 +29,7 @@ function daysFromNow(days) {
 }
 
 async function main() {
+  const seedVerifiedAt = new Date();
   // eslint-disable-next-line no-console
   console.log(
     `[seed] Login password for all seeded accounts: ${SEED_LOGIN_PASSWORD}`,
@@ -45,6 +46,7 @@ async function main() {
     data: {
       email: "jamesjhonn93@gmail.com",
       passwordHash: seedPasswordHash,
+      emailVerifiedAt: seedVerifiedAt,
       name: "Host James",
       role: UserRole.HOST,
       avatarUrl: "https://i.pravatar.cc/150?img=14",
@@ -58,6 +60,7 @@ async function main() {
     data: {
       email: "hoster1@gmail.com",
       passwordHash: seedPasswordHash,
+      emailVerifiedAt: seedVerifiedAt,
       name: "Host Hoster1",
       role: UserRole.HOST,
       avatarUrl: "https://i.pravatar.cc/150?img=15",
@@ -69,6 +72,7 @@ async function main() {
     data: {
       email: "hoster2@gmail.com",
       passwordHash: seedPasswordHash,
+      emailVerifiedAt: seedVerifiedAt,
       name: "Host Hoster2",
       role: UserRole.HOST,
       avatarUrl: "https://i.pravatar.cc/150?img=16",
@@ -80,6 +84,7 @@ async function main() {
     data: {
       email: "andrea.business112@gmail.com",
       passwordHash: seedPasswordHash,
+      emailVerifiedAt: seedVerifiedAt,
       name: "Platform Admin",
       role: UserRole.ADMIN,
       avatarUrl: "https://i.pravatar.cc/150?img=12",
@@ -99,6 +104,7 @@ async function main() {
         data: {
           email,
           passwordHash: seedPasswordHash,
+          emailVerifiedAt: seedVerifiedAt,
           name,
           role: UserRole.GUEST,
           avatarUrl: `https://i.pravatar.cc/150?img=${img}`,

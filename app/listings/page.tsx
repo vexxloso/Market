@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { buildListingsWhere } from "@/lib/listings-search";
-import { getSessionUser } from "@/lib/auth";
+import { getVerifiedSessionUser } from "@/lib/auth";
 import { ListingLikeButton } from "@/components/listing-like-button";
 import { ReviewRatingSummary } from "@/components/review-rating-summary";
 import { StayTypeIcon } from "@/components/stay-type-icon";
@@ -95,7 +95,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
     guests,
   });
 
-  const session = await getSessionUser();
+  const session = await getVerifiedSessionUser();
 
   const totalCount = await prisma.listing.count({ where });
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));

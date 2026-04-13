@@ -18,15 +18,23 @@ const account = [
 ];
 
 const legal = [
+  { href: "/contact", label: "Contact us" },
   { href: "/terms", label: "Terms & conditions" },
   { href: "/privacy", label: "Privacy & cookie policy" },
+];
+
+/** Shown in footer — key public inboxes (mailto). */
+const contactEmails: { href: string; label: string }[] = [
+  { href: "mailto:info@noirehaven.com", label: "info@noirehaven.com" },
+  { href: "mailto:supporto@noirehaven.com", label: "supporto@noirehaven.com" },
+  { href: "mailto:privacy@noirehaven.com", label: "privacy@noirehaven.com" },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="surface mt-auto border-t border-[var(--border)]">
       <div className="container py-12 pb-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <div>
             <Link
               href="/"
@@ -108,10 +116,32 @@ export function SiteFooter() {
               ))}
             </ul>
           </div>
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-900">
+              Email
+            </h2>
+            <ul className="mt-4 space-y-3 text-sm">
+              <li>
+                <Link href="/contact" className="muted transition hover:text-neutral-900">
+                  All contact options
+                </Link>
+              </li>
+              {contactEmails.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className="muted transition hover:text-neutral-900"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
         <div className="mt-10 flex flex-col gap-3 border-t border-[var(--border)] pt-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Noire Haven. All rights reserved.</p>
-          <p className="text-xs sm:text-sm">A demo marketplace for short-term stays.</p>
+          <p className="text-xs sm:text-sm">A marketplace for short-term stays.</p>
         </div>
       </div>
     </footer>

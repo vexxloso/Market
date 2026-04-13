@@ -100,11 +100,13 @@ export async function getVerifiedSessionUser() {
         name: true,
         avatarUrl: true,
         bannedAt: true,
+        emailVerifiedAt: true,
       },
     });
 
     if (!dbUser) return null;
     if (dbUser.bannedAt) return null;
+    if (!dbUser.emailVerifiedAt) return null;
 
     return {
       id: dbUser.id,

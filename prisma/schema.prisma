@@ -35,11 +35,19 @@ model User {
   showTravelStamps Boolean   @default(true)
   /// Set when a platform admin suspends the account; blocks sign-in and API access.
   bannedAt         DateTime?
+  /// Set when the user confirms their email (verification link).
+  emailVerifiedAt  DateTime?
+  emailVerificationToken   String?
+  emailVerificationExpires DateTime?
+  /// 6-digit one-time code (same expiry as emailVerificationExpires).
+  emailVerificationCode    String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   listings         Listing[]
   bookings         Booking[]
   reviews          Review[]
+
+  @@index([emailVerificationToken])
 }
 
 model Listing {

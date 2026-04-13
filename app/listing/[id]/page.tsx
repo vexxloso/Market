@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { UserRole } from "@prisma/client";
-import { getSessionUser } from "@/lib/auth";
+import { getVerifiedSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AmenityIcon } from "@/app/host/new/amenity-icons";
 import { IconGlobeStamp } from "@/components/profile-airbnb-icons";
@@ -78,7 +78,7 @@ export default async function ListingDetailsPage({ params, searchParams }: PageP
   const backListingsHref = listingsUrl(sp);
 
   const [session, listing] = await Promise.all([
-    getSessionUser(),
+    getVerifiedSessionUser(),
     prisma.listing.findUnique({
       where: { id },
       include: {

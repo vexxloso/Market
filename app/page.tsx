@@ -3,7 +3,7 @@ import {
 } from "@/lib/sample-data";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { getVerifiedSessionUser } from "@/lib/auth";
 import { ListingLikeButton } from "@/components/listing-like-button";
 import { buildListingsWhere } from "@/lib/listings-search";
 import { ReviewRatingSummary } from "@/components/review-rating-summary";
@@ -136,7 +136,7 @@ export default async function Home({ searchParams }: PageProps) {
   const guestsRaw = normalizeParam(params.guests);
   const guests = guestsRaw ? Number(guestsRaw) : undefined;
 
-  const session = await getSessionUser();
+  const session = await getVerifiedSessionUser();
 
   const where = buildListingsWhere({
     whereQuery,
