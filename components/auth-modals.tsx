@@ -95,6 +95,7 @@ function LoginForm({
   onSwitchToSignup: () => void;
   onSuccess: () => void;
 }) {
+  const [step, setStep] = useState<"login" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -102,6 +103,8 @@ function LoginForm({
   const [resendBusy, setResendBusy] = useState(false);
   const [resendNote, setResendNote] = useState<string | null>(null);
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
+  const [forgotBusy, setForgotBusy] = useState(false);
+  const [forgotNote, setForgotNote] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -147,6 +150,74 @@ function LoginForm({
     setResendNote(
       data.message ??
         "If this account is still unconfirmed, we sent a new link and 6-digit code.",
+    );
+  }
+
+  async function sendResetLink() {
+    setForgotNote(null);
+    setError("");
+    if (!email.trim()) {
+      setForgotNote("Enter your email above first.");
+      return;
+    }
+    setForgotBusy(true);
+    const res = await fetch(withBasePath("/api/auth/forgot-password"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim() }),
+    });
+    setForgotBusy(false);
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      message?: string;
+    };
+    if (!res.ok) {
+      setForgotNote(
+        typeof data.error === "string" ? data.error : "Could not send reset link.",
+      );
+      return;
+    }
+    setForgotNote(
+      data.message ?? "If an account exists for this email, we sent a reset link.",
+    );
+  }
+
+  if (step === "forgot") {
+    return (
+      <div className="space-y-3">
+        <input
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email address"
+          className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm"
+        />
+        <button
+          type="button"
+          disabled={forgotBusy}
+          onClick={() => void sendResetLink()}
+          className="brand-btn w-full rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {forgotBusy ? "Sending…" : "Send reset link"}
+        </button>
+        {forgotNote && (
+          <p className="text-sm text-neutral-700" role="status">
+            {forgotNote}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            setStep("login");
+            setForgotNote(null);
+          }}
+          className="w-full rounded-xl border border-[var(--border)] bg-white py-2.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
+        >
+          Back to log in
+        </button>
+      </div>
     );
   }
 
@@ -211,6 +282,17 @@ function LoginForm({
         className="brand-btn w-full rounded-xl py-2.5 text-sm font-semibold text-white"
       >
         {loading ? "Logging in..." : "Log in"}
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setStep("forgot");
+          setForgotNote(null);
+          setError("");
+        }}
+        className="w-full text-center text-sm font-semibold text-[var(--brand)] underline underline-offset-2"
+      >
+        Forgot password?
       </button>
       <p className="text-center text-sm text-neutral-600">
         New to Noire Haven?{" "}

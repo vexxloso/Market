@@ -41,6 +41,8 @@ model User {
   emailVerificationExpires DateTime?
   /// 6-digit one-time code (same expiry as emailVerificationExpires).
   emailVerificationCode    String?
+  passwordResetToken       String?
+  passwordResetExpires     DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   listings         Listing[]
@@ -48,6 +50,7 @@ model User {
   reviews          Review[]
 
   @@index([emailVerificationToken])
+  @@index([passwordResetToken])
 }
 
 model Listing {

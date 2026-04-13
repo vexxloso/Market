@@ -2,6 +2,7 @@
 
 import { UserRole } from "@prisma/client";
 import { withBasePath } from "@/lib/app-origin";
+import { PASSWORD_MIN_LENGTH } from "@/lib/password";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import {
@@ -72,6 +73,12 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNext, setPwNext] = useState("");
+  const [pwNext2, setPwNext2] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwOk, setPwOk] = useState(false);
 
   const [name, setName] = useState(initialUser.name ?? "");
   const [bio, setBio] = useState(initialUser.bio ?? "");
@@ -163,6 +170,49 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
   };
 
   const initialChar = displayInitial(initialUser.name, initialUser.email);
+
+  async function changePassword() {
+    setPwError(null);
+    setPwOk(false);
+    if (!pwCurrent) {
+      setPwError("Enter your current password.");
+      return;
+    }
+    if (pwNext.length < PASSWORD_MIN_LENGTH) {
+      setPwError(`New password must be at least ${PASSWORD_MIN_LENGTH} characters.`);
+      return;
+    }
+    if (pwNext !== pwNext2) {
+      setPwError("New passwords do not match.");
+      return;
+    }
+
+    setPwBusy(true);
+    try {
+      const res = await fetch(withBasePath("/api/auth/change-password"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNext }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setPwError(
+          typeof (data as { error?: string }).error === "string"
+            ? (data as { error: string }).error
+            : "Could not change password.",
+        );
+        return;
+      }
+      setPwOk(true);
+      setPwCurrent("");
+      setPwNext("");
+      setPwNext2("");
+    } catch {
+      setPwError("Network error while changing password.");
+    } finally {
+      setPwBusy(false);
+    }
+  }
 
   return (
     <div className="container max-w-5xl pb-20 pt-10">
@@ -282,6 +332,57 @@ export function ProfileEditClient({ initialUser }: { initialUser: ProfileEditIni
                 placeholder="Your name"
                 className="mt-1 w-full border-0 bg-transparent p-0 text-base text-neutral-900 outline-none"
               />
+            </div>
+          </section>
+
+          <section className="border-t border-[#EBEBEB] pt-10">
+            <h2 className="text-lg font-semibold text-neutral-900">Change password</h2>
+            <p className="mt-2 text-sm text-[#717171]">
+              For security, we’ll ask for your current password.
+            </p>
+            <div className="mt-4 space-y-3 rounded-2xl border border-[#EBEBEB] bg-white p-5">
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={pwCurrent}
+                onChange={(e) => setPwCurrent(e.target.value)}
+                placeholder="Current password"
+                className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm"
+              />
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={pwNext}
+                onChange={(e) => setPwNext(e.target.value)}
+                placeholder={`New password (min. ${PASSWORD_MIN_LENGTH} characters)`}
+                className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm"
+              />
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={pwNext2}
+                onChange={(e) => setPwNext2(e.target.value)}
+                placeholder="Confirm new password"
+                className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm"
+              />
+              {pwError ? (
+                <p className="text-sm font-medium text-red-600" role="alert">
+                  {pwError}
+                </p>
+              ) : null}
+              {pwOk ? (
+                <p className="text-sm font-medium text-green-700" role="status">
+                  Password updated.
+                </p>
+              ) : null}
+              <button
+                type="button"
+                disabled={pwBusy}
+                onClick={() => void changePassword()}
+                className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 disabled:opacity-60"
+              >
+                {pwBusy ? "Updating…" : "Update password"}
+              </button>
             </div>
           </section>
 
